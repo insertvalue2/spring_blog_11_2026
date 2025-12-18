@@ -17,26 +17,46 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Slf4j
 public class MyExceptionHandler {
 
-    // 내가 지켜볼 예외를 명시를 해주면 ControllerAdvice 가 가지고와 처리 함
+       // 내가 지켜볼 예외를 명시를 해주면 ControllerAdvice 가 가지고와 처리 함
     @ExceptionHandler(Exception400.class)
-    public String ex400(Exception400 e, HttpServletRequest request) {
+    public String ex400(Exception400 e, HttpServletRequest request, Model model) {
         log.warn("=== 400 에러 발생  ===");
         log.warn("요청 URL : {}", request.getRequestURL());
         log.warn("에러 메세지 : {}", e.getMessage());
         log.warn("예외 클래스 : {}", e.getClass().getSimpleName());
-        request.setAttribute("msg", e.getMessage());
+        model.addAttribute("msg", e.getMessage());
+        // [수정] request.setAttribute -> model.addAttribute
         return "err/400";
     }
 
     // 401 인증 오류
+//    @ExceptionHandler(Exception401.class)
+//    public String ex401(Exception401 e, HttpServletRequest request, Model model) {
+//        log.warn("=== 401 에러 발생  ===");
+//        log.warn("요청 URL : {}", request.getRequestURL());
+//        log.warn("에러 메세지 : {}", e.getMessage());
+//        log.warn("예외 클래스 : {}", e.getClass().getSimpleName());
+//        model.addAttribute("msg", e.getMessage());
+//        return "err/401";
+//    }
+    // 401 인증 오류 (로그인 필요)
     @ExceptionHandler(Exception401.class)
-    public String ex401(Exception401 e, HttpServletRequest request) {
+    public ResponseEntity<String> ex401(Exception401 e, HttpServletRequest request) { // Model 제거
         log.warn("=== 401 에러 발생  ===");
         log.warn("요청 URL : {}", request.getRequestURL());
         log.warn("에러 메세지 : {}", e.getMessage());
         log.warn("예외 클래스 : {}", e.getClass().getSimpleName());
-        request.setAttribute("msg", e.getMessage());
-        return "err/401";
+
+        // 자바스크립트 생성: alert 띄우고 -> location.href로 이동
+        String script = "<script>" +
+                "alert('" + e.getMessage() + "');" +
+                "location.href='/login';" +
+                "</script>";
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED) // 401 상태 코드 설정
+                .contentType(MediaType.TEXT_HTML) // HTML 응답임을 명시
+                .body(script);
     }
 
     // 403 인가 오류
@@ -52,7 +72,7 @@ public class MyExceptionHandler {
 
     @ExceptionHandler(Exception403.class)
     @ResponseBody
-    public ResponseEntity<String> ex403(Exception403 e, HttpServletRequest request) {
+    public ResponseEntity<String> ex403(Exception403 e) {
         String script = "<script>alert('"+e.getMessage()+"');" +
                 "history.back();" +
                 "</script>";
@@ -66,12 +86,12 @@ public class MyExceptionHandler {
 
     // 404 인가 오류
     @ExceptionHandler(Exception404.class)
-    public String ex404(Exception404 e, HttpServletRequest request) {
+    public String ex404(Exception404 e, HttpServletRequest request, Model model) {
         log.warn("=== 404 에러 발생  ===");
         log.warn("요청 URL : {}", request.getRequestURL());
         log.warn("에러 메세지 : {}", e.getMessage());
         log.warn("예외 클래스 : {}", e.getClass().getSimpleName());
-        request.setAttribute("msg", e.getMessage());
+        model.addAttribute("msg", e.getMessage());
         return "err/404";
     }
 
